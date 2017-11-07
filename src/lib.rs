@@ -1,3 +1,4 @@
+extern crate htmlescape;
 extern crate serde_json;
 
 mod context;

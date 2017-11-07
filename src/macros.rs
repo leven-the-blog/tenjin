@@ -1,4 +1,4 @@
-//TODO: Macros 2.0 and.or somebody who actually knows macros should improve this.
+//TODO: Macros 2.0 and/or somebody who actually knows macros should improve this.
 
 #[macro_export]
 macro_rules! context {
@@ -121,6 +121,22 @@ macro_rules! context {
     };
 
     ( $self:ident $path:ident $part:ident $parts:ident $sink:ident
+      __inject_dict__ $key:ident => @raw $val:expr, $($body:tt)*
+    ) => {
+        if stringify!($key) == $part {
+            match $parts.next() {
+                None => $crate::Raw($val).inject($parts.as_path(), $sink),
+                Some(_) => Err($crate::Error::Undefined($path.to_owned()))
+            }
+        } else {
+            context! {
+                $self $path $part $parts $sink
+                __inject_dict__ $($body)*
+            }
+        }
+    };
+
+    ( $self:ident $path:ident $part:ident $parts:ident $sink:ident
       __inject_dict__ $key:ident => $val:expr, $($body:tt)*
     ) => {
         if stringify!($key) == $part {
@@ -186,6 +202,22 @@ macro_rules! context {
     };
 
     ( $self:ident $path:ident $part:ident $parts:ident $chomp:ident
+      __iterate_dict__ $key:ident => @raw $val:expr, $($body:tt)*
+    ) => {
+        if stringify!($key) == $part {
+            match $parts.next() {
+                None => $crate::Raw($val).iterate($parts.as_path(), $chomp),
+                Some(_) => Err($crate::Error::Undefined($path.to_owned()))
+            }
+        } else {
+            context! {
+                $self $path $part $parts $chomp
+                __iterate_dict__ $($body)*
+            }
+        }
+    };
+
+    ( $self:ident $path:ident $part:ident $parts:ident $chomp:ident
       __iterate_dict__ $key:ident => $val:expr, $($body:tt)*
     ) => {
         if stringify!($key) == $part {
@@ -207,5 +239,3 @@ macro_rules! context {
         Err($crate::Error::Undefined($path.to_owned()))
     };
 }
-
-//TODO: HTML Escaping.
