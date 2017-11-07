@@ -2,7 +2,10 @@
 name = "tenjin"
 version = "0.1.0"
 authors = ["Ram Kaniyur <quadrupleslap@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/quadrupleslap/tenjin"
+documentation = "https://docs.rs/tenjin"
+description = "A fast and simple template engine."
 
 [dependencies]
-serde = "1.0"
 serde_json = "1.0"
