@@ -1,6 +1,6 @@
-use PathBuf;
+use path::PathBuf;
 use std::borrow::Borrow;
-use std::error::Error;
+use std::error::Error as StdError;
 use std::{fmt, mem};
 
 #[derive(Debug, Clone)]
@@ -40,7 +40,7 @@ pub enum Statement {
 // ident := { char } \ { char } ' ' { char }
 
 impl Template {
-    pub fn compile(src: &str) -> Result<Template, CompileError> {
+    pub fn compile(src: &str) -> Result<Template, Error> {
         let mut body = Vec::new();
         let mut lex  = Lexer::new(src);
     
@@ -72,7 +72,7 @@ impl Template {
     }
 }
 
-fn stmt(lex: &mut Lexer) -> Result<Statement, CompileError> {
+fn stmt(lex: &mut Lexer) -> Result<Statement, Error> {
     //TODO: Distinguish between identifiers and paths.
     match lex.next()? {
         Some(Symbol::Text("for")) => {
@@ -177,7 +177,7 @@ impl<'a> Lexer<'a> {
         self.cur.as_ref()
     }
 
-    fn next(&mut self) -> Result<Option<Symbol<'a>>, CompileError> {
+    fn next(&mut self) -> Result<Option<Symbol<'a>>, Error> {
         let mut next = if self.src.is_empty() {
             None
         } else if self.txt {
@@ -226,14 +226,14 @@ impl<'a> Lexer<'a> {
 }
 
 #[derive(Debug)]
-pub enum CompileError {
+pub enum Error {
     Unexpected(&'static str, String),
 }
 
 fn unexpected<'a, T: Borrow<Symbol<'a>>, U>(
     expected: &'static str,
     found: Option<T>
-) -> Result<U, CompileError>
+) -> Result<U, Error>
 {
     let found = match found {
         Some(found) => {
@@ -246,25 +246,21 @@ fn unexpected<'a, T: Borrow<Symbol<'a>>, U>(
         None => "nothing",
     };
 
-    Err(CompileError::Unexpected(expected, found.into()))
+    Err(Error::Unexpected(expected, found.into()))
 }
 
-impl Error for CompileError {
+impl StdError for Error {
     fn description(&self) -> &str {
-        use CompileError::*;
-
         match self {
-            &Unexpected(_, _) => "unexpected input",
+            &Error::Unexpected(_, _) => "unexpected input",
         }
     }
 }
 
-impl fmt::Display for CompileError {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use CompileError::*;
-
         match self {
-            &Unexpected(a, ref b) => {
+            &Error::Unexpected(a, ref b) => {
                 write!(f, "expected {}, found {}", a, b)
             }
         }

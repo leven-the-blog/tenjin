@@ -1,4 +1,6 @@
-use {Chomp, Error, Path, Result};
+use error::{Error, Result};
+use path::Path;
+use render::Chomp;
 use htmlescape;
 use serde_json::Value;
 use std::borrow::Borrow;
@@ -24,8 +26,8 @@ impl<W: Write> Context<W> for str {
         match path.parts().next() {
             Some(_) => Err(Error::Undefined(path.to_owned())),
             None => {
-                //TODO: Minimal or attribute encode?
-                htmlescape::encode_attribute_w(self, sink)?;
+                //TODO: Somehow warn people to only insert stuff as content.
+                htmlescape::encode_minimal_w(self, sink)?;
                 Ok(())
             },
         }
@@ -96,7 +98,7 @@ display_impls! {
 
 impl<W: Write> Context<W> for Value {
     fn inject(&self, path: Path, sink: &mut W) -> Result<()> {
-        use Value::*;
+        use self::Value::*;
 
         let mut value = self;
 

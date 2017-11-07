@@ -50,7 +50,7 @@ fn main() {
     ").unwrap());
 
     let data = Context {
-        header: "<h1>Attack on Titan Registry???</h1>",
+        header: "<h1>Random Characters</h1>",
         people: &[
             User {
                 first: "Eren",
@@ -68,7 +68,7 @@ fn main() {
                 first: "Armin",
                 last: "Arlert",
                 weight: 55,
-                html: "<pre>...</pre>"
+                html: "<pre> Tactical genius? </pre>"
             },
         ],
     };

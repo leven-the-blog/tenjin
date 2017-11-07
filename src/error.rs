@@ -1,4 +1,5 @@
-use {CompileError, PathBuf};
+use path::PathBuf;
+use compile::Error as CompileError;
 use std::error::Error as StdError;
 use std::{fmt, io, result};
 

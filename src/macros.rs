@@ -51,7 +51,7 @@ macro_rules! context {
     ( $self:ident
       __fns__ $($body:tt)*
     ) => {
-        fn inject(&$self, path: $crate::Path, sink: &mut ZZZ)
+        fn inject(&$self, path: $crate::path::Path, sink: &mut ZZZ)
             -> $crate::Result<()>
         {
             let mut parts = path.parts();
@@ -66,7 +66,7 @@ macro_rules! context {
             }
         }
 
-        fn iterate(&$self, path: $crate::Path, mut chomp: $crate::Chomp<ZZZ>)
+        fn iterate(&$self, path: $crate::path::Path, mut chomp: $crate::render::Chomp<ZZZ>)
             -> $crate::Result<()>
         {
             let mut parts = path.parts();
