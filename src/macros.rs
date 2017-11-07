@@ -209,20 +209,3 @@ macro_rules! context {
 }
 
 //TODO: HTML Escaping.
-
-struct Todo<'a> {
-    a: &'a str,
-    b: &'a str,
-}
-
-context! {
-    self: ('a) Todo<'a> {
-        a => self.a,
-        b => self.b,
-        c => @iter &["hello", "?"][..],
-        d => #{
-            a => self.a,
-            b => self.b,
-        },
-    }
-}
