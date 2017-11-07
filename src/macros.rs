@@ -85,7 +85,7 @@ macro_rules! context {
     // INJECTION
 
     ( $self:ident $path:ident $part:ident $parts:ident $sink:ident
-      __inject_dict__ $key:ident => #{ $($val:tt)* }, $($body:tt)*
+      __inject_dict__ $key:ident => @{ $($val:tt)* }, $($body:tt)*
     ) => {
         if stringify!($key) == $part {
             if let Some(part) = $parts.next() {
@@ -161,7 +161,7 @@ macro_rules! context {
     // ITERATION
 
     ( $self:ident $path:ident $part:ident $parts:ident $chomp:ident
-      __iterate_dict__ $key:ident => #{ $($val:tt)* }, $($body:tt)*
+      __iterate_dict__ $key:ident => @{ $($val:tt)* }, $($body:tt)*
     ) => {
         if stringify!($key) == $part {
             if let Some(part) = $parts.next() {

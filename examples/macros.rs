@@ -23,7 +23,7 @@ context! {
     }
 
     self: ('a) User<'a> {
-        name => #{
+        name => @{
             first => self.first,
             last => self.last,
         },
