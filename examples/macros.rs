@@ -18,8 +18,8 @@ struct User<'a> {
 
 context! {
     self: ('a) Context<'a> {
-        header => @raw  self.header,
-        people => @iter self.people, // Will NOT be escaped.
+        header => @raw  self.header, // Will NOT be escaped.
+        people => @iter self.people,
     }
 
     self: ('a) User<'a> {
