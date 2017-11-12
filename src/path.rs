@@ -2,7 +2,7 @@ const SEP: char = '.';
 
 // Path
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Path<'a> {
     End,
     Pair(&'a str, &'a Path<'a>),
@@ -74,6 +74,7 @@ impl<'a> Path<'a> {
 
 // Parts
 
+#[derive(Debug)]
 pub struct Parts<'a> {
     path: Path<'a>,
 }

@@ -45,6 +45,7 @@ impl<W: Write> Context<W> for str {
     }
 }
 
+#[derive(Debug)]
 pub struct Raw<S>(pub S);
 
 impl<W, S> Context<W> for Raw<S>

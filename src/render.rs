@@ -4,8 +4,9 @@ use error::{Error, Result};
 use path::Path;
 use std::borrow::Borrow;
 use std::collections::HashMap;
+use std::fs;
 use std::fs::File;
-use std::path::Path as FilePath;
+use std::path::PathBuf as FilePathBuf;
 use std::io::{Read, Write};
 
 //TODO: Conditionals.
@@ -13,30 +14,54 @@ use std::io::{Read, Write};
 //TODO: Use tendrils to eliminate allocations during compilation.
 //TODO: Benchmarks.
 
+#[derive(Debug)]
 pub struct Tenjin {
     templates: HashMap<String, Template>,
 }
 
 impl Tenjin {
-    pub fn new<I>(paths: I) -> Result<Tenjin>
-    where
-        I: IntoIterator,
-        I::Item: AsRef<FilePath>,
-    {
+    pub fn new(path: &mut FilePathBuf) -> Result<Tenjin> {
+        fn recurse(
+            path: &mut FilePathBuf,
+            buf: &mut String,
+            tenjin: &mut Tenjin,
+            skip: usize,
+        ) -> Result<()> {
+            if path.is_dir() {
+                for entry in fs::read_dir(&path)?.flat_map(|x| x.ok()) {
+                    path.push(entry.file_name());
+                    recurse(path, buf, tenjin, skip)?;
+                    path.pop();
+                }
+            } else if path.extension() == Some("html".as_ref()) {
+                let mut parts = path.components();
+
+                for _ in 0..skip {
+                    let _ = parts.next();
+                }
+
+                let mut name = parts
+                    .as_path()
+                    .to_string_lossy()
+                    .into_owned();
+
+                let new_len = name.len().saturating_sub(5);
+                name.truncate(new_len);
+
+                buf.clear();
+                File::open(&path)?.read_to_string(buf)?;
+                let template = Template::compile(buf)?;
+                tenjin.register(name, template);
+            }
+
+            Ok(())
+        }
+
         let mut tenjin = Tenjin::empty();
         let mut buffer = String::new();
+        let skip = path.components().count();
 
-        for path in paths {
-            let name = match path.as_ref().file_stem() {
-                Some(name) => name.to_string_lossy().into_owned(),
-                None => continue,
-            };
-
-            buffer.clear();
-            File::open(path)?.read_to_string(&mut buffer)?;
-            let template = Template::compile(&buffer)?;
-            tenjin.register(name, template);
-        }
+        recurse(path, &mut buffer, &mut tenjin, skip)?;
 
         Ok(tenjin)
     }
