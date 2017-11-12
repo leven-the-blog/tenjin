@@ -1,12 +1,16 @@
 [package]
 name = "tenjin"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Ram Kaniyur <quadrupleslap@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/quadrupleslap/tenjin"
 documentation = "https://docs.rs/tenjin"
 description = "A fast and simple template engine."
 
+[features]
+default = ["serde_json", "toml"]
+
 [dependencies]
 htmlescape = "0.3"
-serde_json = "1.0"
+serde_json = { version = "1.0", optional = true }
+toml = { version = "0.4", optional = true }

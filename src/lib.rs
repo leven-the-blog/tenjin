@@ -1,5 +1,8 @@
 extern crate htmlescape;
+#[cfg(feature = "serde_json")]
 extern crate serde_json;
+#[cfg(feature = "toml")]
+extern crate toml;
 
 mod macros;
 pub mod compile;

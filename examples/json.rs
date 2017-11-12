@@ -1,11 +1,13 @@
+#[cfg(feature = "serde_json")]
 #[macro_use]
 extern crate serde_json;
 extern crate tenjin;
 
-use std::io;
-use tenjin::*;
-
+#[cfg(feature = "serde_json")]
 fn main() {
+    use std::io;
+    use tenjin::*;
+
     let mut tenjin = Tenjin::empty();
 
     tenjin.register("test", Template::compile("
@@ -36,4 +38,9 @@ fn main() {
     let template = tenjin.get("test").unwrap();
 
     tenjin.render(template, &data, &mut output.lock()).unwrap();
+}
+
+#[cfg(not(feature = "serde_json"))]
+fn main() {
+    println!("Please enable `serde_json` integration to run this example.");
 }
