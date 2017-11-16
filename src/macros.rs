@@ -124,10 +124,7 @@ macro_rules! context {
       __inject_dict__ $key:ident => @raw $val:expr, $($body:tt)*
     ) => {
         if stringify!($key) == $part {
-            match $parts.next() {
-                None => $crate::Raw($val).inject($parts.as_path(), $sink),
-                Some(_) => Err($crate::Error::Undefined($path.to_owned()))
-            }
+            $crate::Raw($val).inject($parts.as_path(), $sink)
         } else {
             context! {
                 $self $path $part $parts $sink
@@ -140,10 +137,7 @@ macro_rules! context {
       __inject_dict__ $key:ident => $val:expr, $($body:tt)*
     ) => {
         if stringify!($key) == $part {
-            match $parts.next() {
-                None => $val.inject($parts.as_path(), $sink),
-                Some(_) => Err($crate::Error::Undefined($path.to_owned()))
-            }
+            $val.inject($parts.as_path(), $sink)
         } else {
             context! {
                 $self $path $part $parts $sink
@@ -205,10 +199,7 @@ macro_rules! context {
       __iterate_dict__ $key:ident => @raw $val:expr, $($body:tt)*
     ) => {
         if stringify!($key) == $part {
-            match $parts.next() {
-                None => $crate::Raw($val).iterate($parts.as_path(), $chomp),
-                Some(_) => Err($crate::Error::Undefined($path.to_owned()))
-            }
+            $crate::Raw($val).iterate($parts.as_path(), $chomp)
         } else {
             context! {
                 $self $path $part $parts $chomp
@@ -221,10 +212,7 @@ macro_rules! context {
       __iterate_dict__ $key:ident => $val:expr, $($body:tt)*
     ) => {
         if stringify!($key) == $part {
-            match $parts.next() {
-                None => $val.iterate($parts.as_path(), $chomp),
-                Some(_) => Err($crate::Error::Undefined($path.to_owned()))
-            }
+            $val.iterate($parts.as_path(), $chomp)
         } else {
             context! {
                 $self $path $part $parts $chomp
