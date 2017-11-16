@@ -19,10 +19,31 @@ impl<W: Write> Context<W> for Value {
             }
         }
 
-        match value {
-            &String(ref s) => sink.write_all(s.as_bytes()),
-            x => write!(sink, "{}", x),
-        }?;
+        match *value {
+            String(ref s) => {
+                s.inject(Path::new(""), sink)?;
+            }
+
+            Integer(n) => {
+                write!(sink, "{}", n)?;
+            }
+
+            Float(n) => {
+                write!(sink, "{}", n)?;
+            }
+
+            Boolean(b) => {
+                sink.write_all(if b { b"true" } else { b"false" })?;
+            }
+
+            Datetime(ref date) => {
+                write!(sink, "{}", date)?;
+            }
+
+            Array(_) | Table(_) => {
+                return Err(Error::NotInjectable(path.to_owned()));
+            }
+        }
 
         Ok(())
     }
