@@ -2,25 +2,27 @@
 
 [![docs.rs](https://docs.rs/tenjin/badge.svg)](https://docs.rs/tenjin) [![crates.io](https://img.shields.io/crates/v/tenjin.svg)](https://crates.io/crates/tenjin)
 
-A dynamic template engine that is fast, and makes zero allocations when rendering.
+## Buzzwords
 
-## Examples
-
-See the [examples directory](https://github.com/quadrupleslap/tenjin/tree/master/examples) for examples!
+- **dynamic**
+- **zero-allocation** in render
+- **logic-less**
+- enables **structural sharing**
 
 ## Template Syntax
 
 ```
-{ for item in something.something.items } ... { end }
+{ if path.to.item } ... { end }
+{ for item in path.to.items } ... { end }
 { include template_name }
-{ something.something.item }
+{ path.to.item }
 ```
 
 To escape `{` and `}`, use `{{` and `}}`, respectively.
 
 ## Macro Syntax
 
-The macro is used so that you can pass your structs in as data to your templates.
+A macro can be used so that you can pass your own structs in as data to your templates.
 
 ```rust
 context! {
@@ -37,15 +39,17 @@ context! {
 }
 ```
 
-See the [macros example](https://github.com/quadrupleslap/tenjin/blob/master/examples/macros.rs) if you're still not clear how this works. Also, note that all values must be contexts, too, and that at the bottom, strings, integers, etc. are the primitive contexts - it's contexts all the way down.
+You might also want to see the [macros example](https://github.com/quadrupleslap/tenjin/blob/master/examples/macros.rs). Note that these "contexts" are composable.
+
+## Truthiness
+
+1. All undefined values are falsey.
+2. Objects, maps and arrays are truthy.
+3. Booleans evaluate to their own value.
+4. Integers are truthy iff they are non-zero.
+5. Strings are truthy iff they are non-empty.
+6. Try to make truthiness as unsurprising as possible.
 
 ## Contributing
 
-- Features will be added as they are needed. If you think something is missing, please open an issue!
-- If you have time to contribute then please do!
-
-## Why does this exist?
-
-I couldn't find a template engine for Rust that:
-- was dynamic, allowing for changes to the templates without recompiling the entire program; and
-- allowed for structural sharing between the contexts of simultaneous renders.
+Features will be added as they are needed. If you think something is missing, please open an issue!

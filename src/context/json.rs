@@ -6,6 +6,29 @@ use serde_json::Value;
 use std::io::Write;
 
 impl<W: Write> Context<W> for Value {
+    fn truthy(&self, path: Path) -> bool {
+        use self::Value::*;
+
+        let mut value = self;
+
+        for part in path.parts() {
+            if let Some(next_value) = value.get(part) {
+                value = next_value;
+            } else {
+                // Undefined is falsey.
+                return false;
+            }
+        }
+
+        match *value {
+            Null => false,
+            Bool(b) => b,
+            Number(ref n) => n.as_f64() != Some(0.0),
+            String(ref s) => s.len() > 0,
+            Array(_) | Object(_) => true,
+        }
+    }
+
     fn inject(&self, path: Path, sink: &mut W) -> Result<()> {
         use self::Value::*;
 

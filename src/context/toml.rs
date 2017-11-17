@@ -6,6 +6,28 @@ use toml::Value;
 use std::io::Write;
 
 impl<W: Write> Context<W> for Value {
+    fn truthy(&self, path: Path) -> bool {
+        use self::Value::*;
+
+        let mut value = self;
+
+        for part in path.parts() {
+            if let Some(next_value) = value.get(part) {
+                value = next_value;
+            } else {
+                return false;
+            }
+        }
+
+        match *value {
+            String(ref s) => s.len() > 0,
+            Integer(n) => n != 0,
+            Float(n) => n != 0.0,
+            Boolean(b) => b,
+            Datetime(_) | Array(_) | Table(_) => true,
+        }
+    }
+
     fn inject(&self, path: Path, sink: &mut W) -> Result<()> {
         use self::Value::*;
 

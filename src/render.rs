@@ -9,9 +9,7 @@ use std::fs::File;
 use std::path::PathBuf as FilePathBuf;
 use std::io::{Read, Write};
 
-//TODO: Conditionals.
 //TODO: Documentation.
-//TODO: Use tendrils to eliminate allocations during compilation.
 //TODO: Benchmarks.
 
 #[derive(Debug)]
@@ -94,6 +92,17 @@ impl Tenjin {
 
         for statement in template.body() {
             match statement {
+                &Cond { ref pred, ref then, ref otherwise } => {
+                    if context.truthy(Path::new(&pred)) {
+                        self.render(then, context, sink)?;
+                    } else {
+                        if let &Some(ref otherwise) = otherwise {
+                            self.render(otherwise, context, sink)?;
+                        } else {
+                            // No else block.
+                        }
+                    }
+                }
                 &For { ref ident, ref path, ref body } => {
                     context.iterate(Path::new(path), Chomp {
                         caller: self,
@@ -171,6 +180,11 @@ impl<'a, W: Write> Chomp<'a, W> {
 }
 
 impl<'a, W> Context<W> for IncludeContext<'a, W> {
+    fn truthy(&self, path: Path) -> bool {
+        let path = path.prepend(self.path);
+        self.inner.truthy(path)
+    }
+
     fn inject(
         &self,
         path: Path,
@@ -191,6 +205,15 @@ impl<'a, W> Context<W> for IncludeContext<'a, W> {
 }
 
 impl<'a, W> Context<W> for ForContext<'a, W> {
+    fn truthy(&self, path: Path) -> bool {
+        let mut parts = path.parts();
+        if parts.next() == Some(self.name.as_ref()) {
+            self.front.truthy(parts.as_path())
+        } else {
+            self.back.truthy(path)
+        }
+    }
+
     fn inject(
         &self,
         path: Path,

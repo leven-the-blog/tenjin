@@ -1,5 +1,3 @@
-//TODO: Macros 2.0 and/or somebody who actually knows macros should improve this.
-
 #[macro_export]
 macro_rules! context {
     // MAIN
@@ -51,6 +49,20 @@ macro_rules! context {
     ( $self:ident
       __fns__ $($body:tt)*
     ) => {
+        fn truthy(&$self, path: $crate::path::Path) -> bool {
+            let mut parts = path.parts();
+
+            if let Some(part) = parts.next() {
+                context! {
+                    $self path part parts
+                    __truthy_dict__ $($body)*
+                }
+            } else {
+                // All maps are truthy.
+                true
+            }
+        }
+
         fn inject(&$self, path: $crate::path::Path, sink: &mut ZZZ)
             -> $crate::Result<()>
         {
@@ -225,5 +237,76 @@ macro_rules! context {
       __iterate_dict__
     ) => {
         Err($crate::Error::Undefined($path.to_owned()))
+    };
+
+    // TRUTHY
+
+    ( $self:ident $path:ident $part:ident $parts:ident
+      __truthy_dict__ $key:ident => @{ $($val:tt)* }, $($body:tt)*
+    ) => {
+        if stringify!($key) == $part {
+            if let Some(part) = $parts.next() {
+                context! {
+                    $self $path part $parts
+                    __truthy_dict__ $($val)*
+                }
+            } else {
+                // All maps are truthy.
+                true
+            }
+        } else {
+            context! {
+                $self $path $part $parts
+                __truthy_dict__ $($body)*
+            }
+        }
+    };
+
+    ( $self:ident $path:ident $part:ident $parts:ident
+      __truthy_dict__ $key:ident => @iter $val:expr, $($body:tt)*
+    ) => {
+        if stringify!($key) == $part {
+            // All lists are truthy.
+            $parts.next().is_none()
+        } else {
+            context! {
+                $self $path $part $parts
+                __truthy_dict__ $($body)*
+            }
+        }
+    };
+
+    ( $self:ident $path:ident $part:ident $parts:ident
+      __truthy_dict__ $key:ident => @raw $val:expr, $($body:tt)*
+    ) => {
+        if stringify!($key) == $part {
+            //TODO: This should become unnecessary after we un-traitify this object.
+            (&$crate::Raw($val) as &$crate::Context<ZZZ>).truthy($parts.as_path())
+        } else {
+            context! {
+                $self $path $part $parts
+                __truthy_dict__ $($body)*
+            }
+        }
+    };
+
+    ( $self:ident $path:ident $part:ident $parts:ident
+      __truthy_dict__ $key:ident => $val:expr, $($body:tt)*
+    ) => {
+        if stringify!($key) == $part {
+            //TODO: This should become unnecessary after we un-traitify this object.
+            (&$val as &$crate::Context<ZZZ>).truthy($parts.as_path())
+        } else {
+            context! {
+                $self $path $part $parts
+                __truthy_dict__ $($body)*
+            }
+        }
+    };
+
+    ( $self:ident $path:ident $part:ident $parts:ident
+      __truthy_dict__
+    ) => {
+        false
     };
 }
