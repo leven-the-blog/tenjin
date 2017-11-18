@@ -38,7 +38,7 @@ pub enum Statement {
 // stmt  := for | cond | incl | var
 // cond  := 'if' path '}' block [ '{' else '}' block ] '{' end
 // for   := 'for' ident 'in' path '}' block '{' 'end'
-// incl  := 'include' ident [ 'with' path ]
+// incl  := 'include' path [ 'with' path ]
 // var   := path \ 'for' | 'include' | 'if'
 //
 // ident := word \ { char } '.' { char }
@@ -152,7 +152,7 @@ fn forr(lex: &mut Lexer) -> Result<Statement, Error> {
 
     expect(lex, Symbol::Word("in"), "'in'")?;
 
-    let path = ident(lex)?.into();
+    let y = path(lex)?.into();
 
     expect(lex, Symbol::Close, "'}'")?;
 
@@ -185,13 +185,13 @@ fn forr(lex: &mut Lexer) -> Result<Statement, Error> {
     }
 
     let body = Template { body };
-    Ok(Statement::For { ident: x, path, body })
+    Ok(Statement::For { ident: x, path: y, body })
 }
 
 fn incl(lex: &mut Lexer) -> Result<Statement, Error> {
     expect(lex, Symbol::Word("include"), "'include'")?;
 
-    let x = ident(lex)?.into();
+    let x = path(lex)?.into();
 
     let context = if lex.peek() == Some(&Symbol::Word("with")) {
         let _ = lex.next();
