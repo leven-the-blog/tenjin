@@ -95,21 +95,15 @@ impl Tenjin {
                 &Cond { ref pred, ref then, ref otherwise } => {
                     if context.truthy(Path::new(&pred)) {
                         self.render(then, context, sink)?;
-                    } else {
-                        if let &Some(ref otherwise) = otherwise {
+                    } else if let &Some(ref otherwise) = otherwise {
                             self.render(otherwise, context, sink)?;
-                        } else {
+                    } else {
                             // No else block.
-                        }
                     }
                 }
                 &For { ref ident, ref path, ref body } => {
                     context.iterate(Path::new(path), Chomp {
-                        caller: self,
-                        body: body,
-                        context: context,
-                        ident: ident,
-                        sink: sink,
+                        caller: self, body, context, ident, sink,
                     })?;
                 },
                 &Include { ref template, context: ref next } => {

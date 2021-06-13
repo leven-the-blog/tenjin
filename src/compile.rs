@@ -287,12 +287,12 @@ impl<'a> Lexer<'a> {
                 // Escaped close brace.
                 self.src = &self.src[2..];
                 Symbol::Text("}")
-            } else if self.src.starts_with("{") {
+            } else if self.src.starts_with('{') {
                 // Open brace (exit text mode.)
                 self.src = &self.src[1..];
                 self.txt = false;
                 Symbol::Open
-            } else if self.src.starts_with("}") {
+            } else if self.src.starts_with('}') {
                 // Close brace (should be an error.)
                 self.src = &self.src[1..];
                 Symbol::Close
