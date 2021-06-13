@@ -85,7 +85,7 @@ impl Tenjin {
     pub fn render<W: Write>(
         &self,
         template: &Template,
-        context: &Context<W>,
+        context: & dyn Context<W>,
         sink: &mut W,
     ) -> Result<()> {
         use self::Statement::*;
@@ -149,19 +149,19 @@ impl Tenjin {
 pub struct Chomp<'a, W: 'a> {
     caller: &'a Tenjin,
     body: &'a Template,
-    context: &'a Context<W>,
+    context: &'a dyn Context<W>,
     ident: &'a str,
     sink: &'a mut W,
 }
 
 struct IncludeContext<'a, W: 'a> {
-    inner: &'a Context<W>,
+    inner: &'a dyn Context<W>,
     path: &'a str,
 }
 
 struct ForContext<'a, W: 'a> {
-    back: &'a Context<W>,
-    front: &'a Context<W>,
+    back: &'a dyn Context<W>,
+    front: &'a dyn Context<W>,
     name: &'a str,
 }
 

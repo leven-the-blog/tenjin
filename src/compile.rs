@@ -51,7 +51,7 @@ impl Template {
     pub fn compile(src: &str) -> Result<Template, Error> {
         let mut body = Vec::new();
         let mut lex  = Lexer::new(src);
-    
+
         while let Some(sym) = lex.next() {
             match sym {
                 Symbol::Text(s) => {
@@ -100,7 +100,7 @@ fn cond(lex: &mut Lexer) -> Result<Statement, Error> {
     loop {
         match lex.next() {
             Some(Symbol::Text(s)) => {
-                let mut body = match otherwise {
+                let body = match otherwise {
                     Some(ref mut body) => body,
                     None => &mut then,
                 };
@@ -121,7 +121,7 @@ fn cond(lex: &mut Lexer) -> Result<Statement, Error> {
                         otherwise = Some(Vec::new());
                     }
                     _ => {
-                        let mut body = match otherwise {
+                        let body = match otherwise {
                             Some(ref mut body) => body,
                             None => &mut then,
                         };
@@ -308,7 +308,7 @@ impl<'a> Lexer<'a> {
             // Inside braces.
 
             // Ignore whitespace.
-            self.src = self.src.trim_left();
+            self.src = self.src.trim_start();
 
             Some(if self.src.starts_with("{") {
                 // Another open brace (should be an error.)
