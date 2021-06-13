@@ -20,7 +20,7 @@ impl<W: Write> Context<W> for Value {
         }
 
         match *value {
-            String(ref s) => s.len() > 0,
+            String(ref s) => !s.is_empty(),
             Integer(n) => n != 0,
             Float(n) => n != 0.0,
             Boolean(b) => b,
@@ -81,7 +81,7 @@ impl<W: Write> Context<W> for Value {
             }
         }
 
-        if let &Value::Array(ref array) = value {
+        if let Value::Array(ref array) = *value {
             for value in array {
                 chomp.chomp(value)?;
             }

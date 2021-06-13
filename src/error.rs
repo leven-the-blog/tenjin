@@ -34,12 +34,12 @@ impl StdError for Error {
         use Error::*;
 
         match self {
-            &NotInjectable(_) => "variable not injectable",
-            &NotIterable(_) => "variable not iterable",
-            &TemplateNotFound(_) => "template not found",
-            &Undefined(_) => "variable undefined",
-            &Compile(ref error) => error.description(),
-            &Io(ref error) => error.description(),
+            NotInjectable(_) => "variable not injectable",
+            NotIterable(_) => "variable not iterable",
+            TemplateNotFound(_) => "template not found",
+            Undefined(_) => "variable undefined",
+            Compile(ref error) => error.description(),
+            Io(ref error) => error.description(),
         }
     }
 }
@@ -49,12 +49,12 @@ impl fmt::Display for Error {
         use Error::*;
 
         match self {
-            &NotInjectable(ref path) => write!(f, "variable '{}' not injectable", path),
-            &NotIterable(ref path) => write!(f, "variable '{}' not iterable", path),
-            &TemplateNotFound(ref name) => write!(f, "template '{}' not found", name),
-            &Undefined(ref path) => write!(f, "variable '{}' undefined", path),
-            &Compile(ref error) => error.fmt(f),
-            &Io(ref error) => error.fmt(f),
+            NotInjectable(ref path) => write!(f, "variable '{}' not injectable", path),
+            NotIterable(ref path) => write!(f, "variable '{}' not iterable", path),
+            TemplateNotFound(ref name) => write!(f, "template '{}' not found", name),
+            Undefined(ref path) => write!(f, "variable '{}' undefined", path),
+            Compile(ref error) => error.fmt(f),
+            Io(ref error) => error.fmt(f),
         }
     }
 }

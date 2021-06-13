@@ -299,7 +299,7 @@ impl<'a> Lexer<'a> {
             } else {
                 // Raw HTML upto the next brace / EOF.
                 let i = self.src.find(&['{', '}'][..])
-                    .unwrap_or(self.src.len());
+                    .unwrap_or_else(|| self.src.len());
                 let (text, rest) = self.src.split_at(i);
                 self.src = rest;
                 Symbol::Text(text)
@@ -310,11 +310,11 @@ impl<'a> Lexer<'a> {
             // Ignore whitespace.
             self.src = self.src.trim_start();
 
-            Some(if self.src.starts_with("{") {
+            Some(if self.src.starts_with('{') {
                 // Another open brace (should be an error.)
                 self.src = &self.src[1..];
                 Symbol::Open
-            } else if self.src.starts_with("}") {
+            } else if self.src.starts_with('}') {
                 // A close brace (re-enter text mode.)
                 self.src = &self.src[1..];
                 self.txt = true;
@@ -322,7 +322,7 @@ impl<'a> Lexer<'a> {
             } else {
                 // Word until next whitespace / brace / EOF.
                 let i = self.src.find(['{', '}', ' '].as_ref())
-                    .unwrap_or(self.src.len());
+                    .unwrap_or_else(|| self.src.len());
                 let (word, rest) = self.src.split_at(i);
                 self.src = rest;
                 Symbol::Word(word)
@@ -347,10 +347,10 @@ fn unexpected<'a, T: Borrow<Symbol<'a>>, U>(
     let found = match found {
         Some(found) => {
             match found.borrow() {
-                &Symbol::Open    => "'{'",
-                &Symbol::Close   => "'}'",
-                &Symbol::Text(s) => s,
-                &Symbol::Word(s) => s,
+                Symbol::Open    => "'{'",
+                Symbol::Close   => "'}'",
+                Symbol::Text(s) => s,
+                Symbol::Word(s) => s,
             }
         },
         None => "nothing",
@@ -361,16 +361,16 @@ fn unexpected<'a, T: Borrow<Symbol<'a>>, U>(
 
 impl StdError for Error {
     fn description(&self) -> &str {
-        match self {
-            &Error::Unexpected(_, _) => "unexpected input",
+        match *self {
+            Error::Unexpected(_, _) => "unexpected input",
         }
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &Error::Unexpected(a, ref b) => {
+        match *self {
+            Error::Unexpected(a, ref b) => {
                 write!(f, "expected {}, found {}", a, b)
             }
         }

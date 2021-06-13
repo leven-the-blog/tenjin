@@ -24,7 +24,7 @@ impl<'a> Path<'a> {
     pub fn deconstruct(&self) -> Option<(&'a str, Path<'a>)> {
         let mut node = self;
 
-        while let &Path::Pair(first, rest) = node {
+        while let Path::Pair(first, rest) = *node {
             let mut chars  = first.chars();
             let mut substr = first;
 
@@ -55,14 +55,14 @@ impl<'a> Path<'a> {
         let mut buf = PathBuf::new();
         let mut cur = self;
 
-        if let &Path::Pair(first, next) = cur {
+        if let Path::Pair(first, next) = *cur {
             buf.push_str(first);
             cur = next;
         } else {
             return buf;
         }
 
-        while let &Path::Pair(first, next) = cur {
+        while let Path::Pair(first, next) = *cur {
             buf.push(SEP);
             buf.push_str(first);
             cur = next;

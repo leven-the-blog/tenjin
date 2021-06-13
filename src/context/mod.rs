@@ -60,7 +60,7 @@ impl<W: Write> Context<W> for str {
     fn truthy(&self, path: Path) -> bool {
         match path.parts().next() {
             Some(_) => false,
-            None => self.len() > 0,
+            None => !self.is_empty(),
         }
     }
 

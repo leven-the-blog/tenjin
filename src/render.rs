@@ -91,25 +91,25 @@ impl Tenjin {
         use self::Statement::*;
 
         for statement in template.body() {
-            match statement {
-                &Cond { ref pred, ref then, ref otherwise } => {
+            match *statement {
+                Cond { ref pred, ref then, ref otherwise } => {
                     if context.truthy(Path::new(&pred)) {
                         self.render(then, context, sink)?;
-                    } else if let &Some(ref otherwise) = otherwise {
+                    } else if let Some(ref otherwise) = *otherwise {
                             self.render(otherwise, context, sink)?;
                     } else {
                             // No else block.
                     }
                 }
-                &For { ref ident, ref path, ref body } => {
+                For { ref ident, ref path, ref body } => {
                     context.iterate(Path::new(path), Chomp {
                         caller: self, body, context, ident, sink,
                     })?;
                 },
-                &Include { ref template, context: ref next } => {
+                Include { ref template, context: ref next } => {
                     if let Some(template) = self.templates.get(template) {
-                        match next {
-                            &Some(ref next) => self.render(
+                        match *next {
+                            Some(ref next) => self.render(
                                 template,
                                 &IncludeContext {
                                     inner: context,
@@ -117,7 +117,7 @@ impl Tenjin {
                                 },
                                 sink,
                             ),
-                            &None => self.render(
+                            None => self.render(
                                 template,
                                 context,
                                 sink,
@@ -127,10 +127,10 @@ impl Tenjin {
                         return Err(Error::TemplateNotFound(template.clone()));
                     }
                 },
-                &Inject { ref path } => {
+                Inject { ref path } => {
                     context.inject(Path::new(path), sink)?;
                 },
-                &Content { ref content } => {
+                Content { ref content } => {
                     sink.write_all(content.as_bytes())?;
                 },
             }
@@ -201,7 +201,7 @@ impl<'a, W> Context<W> for IncludeContext<'a, W> {
 impl<'a, W> Context<W> for ForContext<'a, W> {
     fn truthy(&self, path: Path) -> bool {
         let mut parts = path.parts();
-        if parts.next() == Some(self.name.as_ref()) {
+        if parts.next() == Some(self.name) {
             self.front.truthy(parts.as_path())
         } else {
             self.back.truthy(path)
@@ -227,7 +227,7 @@ impl<'a, W> Context<W> for ForContext<'a, W> {
         cb: Chomp<W>
     ) -> Result<()> {
         let mut parts = path.parts();
-        if parts.next() == Some(self.name.as_ref()) {
+        if parts.next() == Some(self.name) {
             self.front.iterate(parts.as_path(), cb)
         } else {
             self.back.iterate(path, cb)
