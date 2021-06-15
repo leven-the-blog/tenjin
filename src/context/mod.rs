@@ -1,7 +1,7 @@
 use error::{Error, Result};
+use html_escape;
 use path::Path;
 use render::Chomp;
-use html_escape;
 use std::borrow::Borrow;
 use std::io::Write;
 
@@ -72,7 +72,7 @@ impl<W: Write> Context<W> for str {
                 html_escape::encode_text_minimal_to_writer(self, sink)?;
                 // htmlescape::encode_minimal_w(self, sink)?;
                 Ok(())
-            },
+            }
         }
     }
 
@@ -103,7 +103,7 @@ where
             None => {
                 sink.write_all(self.0.borrow().as_bytes())?;
                 Ok(())
-            },
+            }
         }
     }
 
@@ -126,7 +126,7 @@ impl<W: Write> Context<W> for bool {
             None => {
                 sink.write_all(if *self { b"true" } else { b"false" })?;
                 Ok(())
-            },
+            }
         }
     }
 
@@ -139,33 +139,33 @@ impl<W: Write> Context<W> for bool {
 }
 
 macro_rules! num_impl {
-($x:ty, $y:expr) => {
-    impl<W: Write> Context<W> for $x {
-        fn truthy(&self, path: Path) -> bool {
-            match path.parts().next() {
-                Some(_) => false,
-                None => *self != $y,
+    ($x:ty, $y:expr) => {
+        impl<W: Write> Context<W> for $x {
+            fn truthy(&self, path: Path) -> bool {
+                match path.parts().next() {
+                    Some(_) => false,
+                    None => *self != $y,
+                }
             }
-        }
 
-        fn inject(&self, path: Path, sink: &mut W) -> Result<()> {
-            match path.parts().next() {
-                Some(_) => Err(Error::Undefined(path.to_owned())),
-                None => {
-                    write!(sink, "{}", self)?;
-                    Ok(())
-                },
+            fn inject(&self, path: Path, sink: &mut W) -> Result<()> {
+                match path.parts().next() {
+                    Some(_) => Err(Error::Undefined(path.to_owned())),
+                    None => {
+                        write!(sink, "{}", self)?;
+                        Ok(())
+                    }
+                }
             }
-        }
 
-        fn iterate(&self, path: Path, _: Chomp<W>) -> Result<()> {
-            match path.parts().next() {
-                Some(_) => Err(Error::Undefined(path.to_owned())),
-                None => Err(Error::NotIterable(path.to_owned())),
+            fn iterate(&self, path: Path, _: Chomp<W>) -> Result<()> {
+                match path.parts().next() {
+                    Some(_) => Err(Error::Undefined(path.to_owned())),
+                    None => Err(Error::NotIterable(path.to_owned())),
+                }
             }
         }
-    }
-}
+    };
 }
 
 macro_rules! int_impls {

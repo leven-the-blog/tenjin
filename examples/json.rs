@@ -10,7 +10,10 @@ fn main() {
 
     let mut tenjin = Tenjin::empty();
 
-    tenjin.register("test", Template::compile("
+    tenjin.register(
+        "test",
+        Template::compile(
+            "
         First Name: {{ person.name.first }}
         Last Name:  {{ person.name.last }}
         Weight:     {{ person.weight }} kg
@@ -19,7 +22,10 @@ fn main() {
             Last Name:  { person.name.last }
             Weight:     { person.weight } kg
         { end }
-    ").unwrap());
+    ",
+        )
+        .unwrap(),
+    );
 
     let data = json!({
         "people": [{
@@ -34,7 +40,7 @@ fn main() {
         }]
     });
 
-    let output   = io::stdout();
+    let output = io::stdout();
     let template = tenjin.get("test").unwrap();
 
     tenjin.render(template, &data, &mut output.lock()).unwrap();

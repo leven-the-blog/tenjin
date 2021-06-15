@@ -10,10 +10,10 @@ struct Context<'a> {
 }
 
 struct User<'a> {
-    first:  &'a str,
-    last:   &'a str,
+    first: &'a str,
+    last: &'a str,
     weight: usize,
-    html:   &'a str,
+    html: &'a str,
 }
 
 context! {
@@ -35,7 +35,10 @@ context! {
 fn main() {
     let mut tenjin = Tenjin::empty();
 
-    tenjin.register("test", Template::compile("
+    tenjin.register(
+        "test",
+        Template::compile(
+            "
         { header }
 
         First Name: {{ person.name.first }}
@@ -47,7 +50,10 @@ fn main() {
             Weight:     { person.weight } kg
             Fav. HTML:  { person.html }
         { end }
-    ").unwrap());
+    ",
+        )
+        .unwrap(),
+    );
 
     let data = Context {
         header: "<h1>Random Characters</h1>",
@@ -56,24 +62,24 @@ fn main() {
                 first: "Eren",
                 last: "Jaeger",
                 weight: 63,
-                html: "<strong>"
+                html: "<strong>",
             },
             User {
                 first: "Mikasa",
                 last: "Ackerman",
                 weight: 68,
-                html: "<em></em>"
+                html: "<em></em>",
             },
             User {
                 first: "Armin",
                 last: "Arlert",
                 weight: 55,
-                html: "<pre> Tactical genius? </pre>"
+                html: "<pre> Tactical genius? </pre>",
             },
         ],
     };
 
-    let output   = io::stdout();
+    let output = io::stdout();
     let template = tenjin.get("test").unwrap();
 
     tenjin.render(template, &data, &mut output.lock()).unwrap();

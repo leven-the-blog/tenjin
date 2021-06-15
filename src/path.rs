@@ -25,7 +25,7 @@ impl<'a> Path<'a> {
         let mut node = self;
 
         while let Path::Pair(first, rest) = *node {
-            let mut chars  = first.chars();
+            let mut chars = first.chars();
             let mut substr = first;
 
             while let Some(c) = chars.next() {
@@ -34,15 +34,13 @@ impl<'a> Path<'a> {
                     continue;
                 }
 
-                return Some(
-                    if let Some(end) = substr.find(SEP) {
-                        let first  = &substr[..end];
-                        let second = &substr[end + SEP.len_utf8()..];
-                        (first, Path::Pair(second, rest))
-                    } else {
-                        (substr, *rest)
-                    }
-                );
+                return Some(if let Some(end) = substr.find(SEP) {
+                    let first = &substr[..end];
+                    let second = &substr[end + SEP.len_utf8()..];
+                    (first, Path::Pair(second, rest))
+                } else {
+                    (substr, *rest)
+                });
             }
 
             node = rest;

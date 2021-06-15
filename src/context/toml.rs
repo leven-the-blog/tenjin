@@ -2,8 +2,8 @@ use context::Context;
 use error::{Error, Result};
 use path::Path;
 use render::Chomp;
-use toml::Value;
 use std::io::Write;
+use toml::Value;
 
 impl<W: Write> Context<W> for Value {
     fn truthy(&self, path: Path) -> bool {
