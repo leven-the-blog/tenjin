@@ -6,8 +6,8 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
-use std::path::PathBuf as FilePathBuf;
 use std::io::{Read, Write};
+use std::path::PathBuf as FilePathBuf;
 
 //TODO: Documentation.
 //TODO: Benchmarks.
@@ -38,10 +38,7 @@ impl Tenjin {
                     let _ = parts.next();
                 }
 
-                let mut name = parts
-                    .as_path()
-                    .to_string_lossy()
-                    .into_owned();
+                let mut name = parts.as_path().to_string_lossy().into_owned();
 
                 let new_len = name.len().saturating_sub(5);
                 name.truncate(new_len);
@@ -70,11 +67,7 @@ impl Tenjin {
         }
     }
 
-    pub fn register<S: Into<String>>(
-        &mut self,
-        name: S,
-        template: Template
-    ) -> Option<Template> {
+    pub fn register<S: Into<String>>(&mut self, name: S, template: Template) -> Option<Template> {
         self.templates.insert(name.into(), template)
     }
 
@@ -85,37 +78,49 @@ impl Tenjin {
     pub fn render<W: Write>(
         &self,
         template: &Template,
-        context: &Context<W>,
+        context: &dyn Context<W>,
         sink: &mut W,
     ) -> Result<()> {
         use self::Statement::*;
 
         for statement in template.body() {
-            match statement {
-                &Cond { ref pred, ref then, ref otherwise } => {
+            match *statement {
+                Cond {
+                    ref pred,
+                    ref then,
+                    ref otherwise,
+                } => {
                     if context.truthy(Path::new(&pred)) {
                         self.render(then, context, sink)?;
+                    } else if let Some(ref otherwise) = *otherwise {
+                        self.render(otherwise, context, sink)?;
                     } else {
-                        if let &Some(ref otherwise) = otherwise {
-                            self.render(otherwise, context, sink)?;
-                        } else {
-                            // No else block.
-                        }
+                        // No else block.
                     }
                 }
-                &For { ref ident, ref path, ref body } => {
-                    context.iterate(Path::new(path), Chomp {
-                        caller: self,
-                        body: body,
-                        context: context,
-                        ident: ident,
-                        sink: sink,
-                    })?;
-                },
-                &Include { ref template, context: ref next } => {
+                For {
+                    ref ident,
+                    ref path,
+                    ref body,
+                } => {
+                    context.iterate(
+                        Path::new(path),
+                        Chomp {
+                            caller: self,
+                            body,
+                            context,
+                            ident,
+                            sink,
+                        },
+                    )?;
+                }
+                Include {
+                    ref template,
+                    context: ref next,
+                } => {
                     if let Some(template) = self.templates.get(template) {
-                        match next {
-                            &Some(ref next) => self.render(
+                        match *next {
+                            Some(ref next) => self.render(
                                 template,
                                 &IncludeContext {
                                     inner: context,
@@ -123,22 +128,18 @@ impl Tenjin {
                                 },
                                 sink,
                             ),
-                            &None => self.render(
-                                template,
-                                context,
-                                sink,
-                            ),
+                            None => self.render(template, context, sink),
                         }?;
                     } else {
                         return Err(Error::TemplateNotFound(template.clone()));
                     }
-                },
-                &Inject { ref path } => {
+                }
+                Inject { ref path } => {
                     context.inject(Path::new(path), sink)?;
-                },
-                &Content { ref content } => {
+                }
+                Content { ref content } => {
                     sink.write_all(content.as_bytes())?;
-                },
+                }
             }
         }
 
@@ -149,19 +150,19 @@ impl Tenjin {
 pub struct Chomp<'a, W: 'a> {
     caller: &'a Tenjin,
     body: &'a Template,
-    context: &'a Context<W>,
+    context: &'a dyn Context<W>,
     ident: &'a str,
     sink: &'a mut W,
 }
 
 struct IncludeContext<'a, W: 'a> {
-    inner: &'a Context<W>,
+    inner: &'a dyn Context<W>,
     path: &'a str,
 }
 
 struct ForContext<'a, W: 'a> {
-    back: &'a Context<W>,
-    front: &'a Context<W>,
+    back: &'a dyn Context<W>,
+    front: &'a dyn Context<W>,
     name: &'a str,
 }
 
@@ -185,20 +186,12 @@ impl<'a, W> Context<W> for IncludeContext<'a, W> {
         self.inner.truthy(path)
     }
 
-    fn inject(
-        &self,
-        path: Path,
-        sink: &mut W
-    ) -> Result<()> {
+    fn inject(&self, path: Path, sink: &mut W) -> Result<()> {
         let path = path.prepend(self.path);
         self.inner.inject(path, sink)
     }
 
-    fn iterate(
-        &self,
-        path: Path,
-        cb: Chomp<W>
-    ) -> Result<()> {
+    fn iterate(&self, path: Path, cb: Chomp<W>) -> Result<()> {
         let path = path.prepend(self.path);
         self.inner.iterate(path, cb)
     }
@@ -207,18 +200,14 @@ impl<'a, W> Context<W> for IncludeContext<'a, W> {
 impl<'a, W> Context<W> for ForContext<'a, W> {
     fn truthy(&self, path: Path) -> bool {
         let mut parts = path.parts();
-        if parts.next() == Some(self.name.as_ref()) {
+        if parts.next() == Some(self.name) {
             self.front.truthy(parts.as_path())
         } else {
             self.back.truthy(path)
         }
     }
 
-    fn inject(
-        &self,
-        path: Path,
-        sink: &mut W
-    ) -> Result<()> {
+    fn inject(&self, path: Path, sink: &mut W) -> Result<()> {
         let mut parts = path.parts();
         if parts.next() == Some(self.name.as_ref()) {
             self.front.inject(parts.as_path(), sink)
@@ -227,13 +216,9 @@ impl<'a, W> Context<W> for ForContext<'a, W> {
         }
     }
 
-    fn iterate(
-        &self,
-        path: Path,
-        cb: Chomp<W>
-    ) -> Result<()> {
+    fn iterate(&self, path: Path, cb: Chomp<W>) -> Result<()> {
         let mut parts = path.parts();
-        if parts.next() == Some(self.name.as_ref()) {
+        if parts.next() == Some(self.name) {
             self.front.iterate(parts.as_path(), cb)
         } else {
             self.back.iterate(path, cb)

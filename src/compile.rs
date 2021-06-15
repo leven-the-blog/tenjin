@@ -17,12 +17,12 @@ pub enum Statement {
     },
     For {
         ident: String,
-        path:  PathBuf,
-        body:  Template,
+        path: PathBuf,
+        body: Template,
     },
     Include {
         template: String,
-        context:  Option<PathBuf>,
+        context: Option<PathBuf>,
     },
     Inject {
         path: PathBuf,
@@ -50,14 +50,12 @@ pub enum Statement {
 impl Template {
     pub fn compile(src: &str) -> Result<Template, Error> {
         let mut body = Vec::new();
-        let mut lex  = Lexer::new(src);
-    
+        let mut lex = Lexer::new(src);
+
         while let Some(sym) = lex.next() {
             match sym {
                 Symbol::Text(s) => {
-                    body.push(Statement::Content {
-                        content: s.into(),
-                    });
+                    body.push(Statement::Content { content: s.into() });
                 }
                 Symbol::Open => {
                     body.push(stmt(&mut lex)?);
@@ -100,37 +98,33 @@ fn cond(lex: &mut Lexer) -> Result<Statement, Error> {
     loop {
         match lex.next() {
             Some(Symbol::Text(s)) => {
-                let mut body = match otherwise {
+                let body = match otherwise {
                     Some(ref mut body) => body,
                     None => &mut then,
                 };
 
-                body.push(Statement::Content {
-                    content: s.into(),
-                });
+                body.push(Statement::Content { content: s.into() });
             }
-            Some(Symbol::Open) => {
-                match lex.peek() {
-                    Some(&Symbol::Word("end")) => {
-                        let _ = lex.next();
-                        break;
-                    }
-                    Some(&Symbol::Word("else")) => {
-                        let _ = lex.next();
-                        expect(lex, Symbol::Close, "'}'")?;
-                        otherwise = Some(Vec::new());
-                    }
-                    _ => {
-                        let mut body = match otherwise {
-                            Some(ref mut body) => body,
-                            None => &mut then,
-                        };
-
-                        body.push(stmt(lex)?);
-                        expect(lex, Symbol::Close, "'}'")?;
-                    }
+            Some(Symbol::Open) => match lex.peek() {
+                Some(&Symbol::Word("end")) => {
+                    let _ = lex.next();
+                    break;
                 }
-            }
+                Some(&Symbol::Word("else")) => {
+                    let _ = lex.next();
+                    expect(lex, Symbol::Close, "'}'")?;
+                    otherwise = Some(Vec::new());
+                }
+                _ => {
+                    let body = match otherwise {
+                        Some(ref mut body) => body,
+                        None => &mut then,
+                    };
+
+                    body.push(stmt(lex)?);
+                    expect(lex, Symbol::Close, "'}'")?;
+                }
+            },
             x => {
                 return unexpected("text or '{'", x);
             }
@@ -138,11 +132,13 @@ fn cond(lex: &mut Lexer) -> Result<Statement, Error> {
     }
 
     let then = Template { body: then };
-    let otherwise = otherwise.map(|x| {
-        Template { body: x }
-    });
+    let otherwise = otherwise.map(|x| Template { body: x });
 
-    Ok(Statement::Cond { pred, then, otherwise })
+    Ok(Statement::Cond {
+        pred,
+        then,
+        otherwise,
+    })
 }
 
 fn forr(lex: &mut Lexer) -> Result<Statement, Error> {
@@ -161,22 +157,18 @@ fn forr(lex: &mut Lexer) -> Result<Statement, Error> {
     loop {
         match lex.next() {
             Some(Symbol::Text(s)) => {
-                body.push(Statement::Content {
-                    content: s.into(),
-                });
+                body.push(Statement::Content { content: s.into() });
             }
-            Some(Symbol::Open) => {
-                match lex.peek() {
-                    Some(&Symbol::Word("end")) => {
-                        let _ = lex.next();
-                        break;
-                    }
-                    _ => {
-                        body.push(stmt(lex)?);
-                        expect(lex, Symbol::Close, "'}'")?;
-                    }
+            Some(Symbol::Open) => match lex.peek() {
+                Some(&Symbol::Word("end")) => {
+                    let _ = lex.next();
+                    break;
                 }
-            }
+                _ => {
+                    body.push(stmt(lex)?);
+                    expect(lex, Symbol::Close, "'}'")?;
+                }
+            },
             x => {
                 println!("{}", lex.src);
                 return unexpected("text or '{'", x);
@@ -185,7 +177,11 @@ fn forr(lex: &mut Lexer) -> Result<Statement, Error> {
     }
 
     let body = Template { body };
-    Ok(Statement::For { ident: x, path: y, body })
+    Ok(Statement::For {
+        ident: x,
+        path: y,
+        body,
+    })
 }
 
 fn incl(lex: &mut Lexer) -> Result<Statement, Error> {
@@ -200,7 +196,10 @@ fn incl(lex: &mut Lexer) -> Result<Statement, Error> {
         None
     };
 
-    Ok(Statement::Include { template: x, context })
+    Ok(Statement::Include {
+        template: x,
+        context,
+    })
 }
 
 fn var(lex: &mut Lexer) -> Result<Statement, Error> {
@@ -287,19 +286,21 @@ impl<'a> Lexer<'a> {
                 // Escaped close brace.
                 self.src = &self.src[2..];
                 Symbol::Text("}")
-            } else if self.src.starts_with("{") {
+            } else if self.src.starts_with('{') {
                 // Open brace (exit text mode.)
                 self.src = &self.src[1..];
                 self.txt = false;
                 Symbol::Open
-            } else if self.src.starts_with("}") {
+            } else if self.src.starts_with('}') {
                 // Close brace (should be an error.)
                 self.src = &self.src[1..];
                 Symbol::Close
             } else {
                 // Raw HTML upto the next brace / EOF.
-                let i = self.src.find(&['{', '}'][..])
-                    .unwrap_or(self.src.len());
+                let i = self
+                    .src
+                    .find(&['{', '}'][..])
+                    .unwrap_or_else(|| self.src.len());
                 let (text, rest) = self.src.split_at(i);
                 self.src = rest;
                 Symbol::Text(text)
@@ -308,21 +309,23 @@ impl<'a> Lexer<'a> {
             // Inside braces.
 
             // Ignore whitespace.
-            self.src = self.src.trim_left();
+            self.src = self.src.trim_start();
 
-            Some(if self.src.starts_with("{") {
+            Some(if self.src.starts_with('{') {
                 // Another open brace (should be an error.)
                 self.src = &self.src[1..];
                 Symbol::Open
-            } else if self.src.starts_with("}") {
+            } else if self.src.starts_with('}') {
                 // A close brace (re-enter text mode.)
                 self.src = &self.src[1..];
                 self.txt = true;
                 Symbol::Close
             } else {
                 // Word until next whitespace / brace / EOF.
-                let i = self.src.find(['{', '}', ' '].as_ref())
-                    .unwrap_or(self.src.len());
+                let i = self
+                    .src
+                    .find(['{', '}', ' '].as_ref())
+                    .unwrap_or_else(|| self.src.len());
                 let (word, rest) = self.src.split_at(i);
                 self.src = rest;
                 Symbol::Word(word)
@@ -341,17 +344,14 @@ pub enum Error {
 
 fn unexpected<'a, T: Borrow<Symbol<'a>>, U>(
     expected: &'static str,
-    found: Option<T>
-) -> Result<U, Error>
-{
+    found: Option<T>,
+) -> Result<U, Error> {
     let found = match found {
-        Some(found) => {
-            match found.borrow() {
-                &Symbol::Open    => "'{'",
-                &Symbol::Close   => "'}'",
-                &Symbol::Text(s) => s,
-                &Symbol::Word(s) => s,
-            }
+        Some(found) => match found.borrow() {
+            Symbol::Open => "'{'",
+            Symbol::Close => "'}'",
+            Symbol::Text(s) => s,
+            Symbol::Word(s) => s,
         },
         None => "nothing",
     };
@@ -361,16 +361,16 @@ fn unexpected<'a, T: Borrow<Symbol<'a>>, U>(
 
 impl StdError for Error {
     fn description(&self) -> &str {
-        match self {
-            &Error::Unexpected(_, _) => "unexpected input",
+        match *self {
+            Error::Unexpected(_, _) => "unexpected input",
         }
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &Error::Unexpected(a, ref b) => {
+        match *self {
+            Error::Unexpected(a, ref b) => {
                 write!(f, "expected {}, found {}", a, b)
             }
         }

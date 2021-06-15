@@ -24,7 +24,7 @@ impl<W: Write> Context<W> for Value {
             Null => false,
             Bool(b) => b,
             Number(ref n) => n.as_f64() != Some(0.0),
-            String(ref s) => s.len() > 0,
+            String(ref s) => !s.is_empty(),
             Array(_) | Object(_) => true,
         }
     }
@@ -78,7 +78,7 @@ impl<W: Write> Context<W> for Value {
             }
         }
 
-        if let &Value::Array(ref array) = value {
+        if let Value::Array(ref array) = *value {
             for value in array {
                 chomp.chomp(value)?;
             }
