@@ -1,4 +1,4 @@
-extern crate htmlescape;
+extern crate html_escape;
 #[cfg(feature = "serde_json")]
 extern crate serde_json;
 #[cfg(feature = "toml")]

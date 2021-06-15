@@ -1,7 +1,7 @@
 use error::{Error, Result};
 use path::Path;
 use render::Chomp;
-use htmlescape;
+use html_escape;
 use std::borrow::Borrow;
 use std::io::Write;
 
@@ -69,7 +69,8 @@ impl<W: Write> Context<W> for str {
             Some(_) => Err(Error::Undefined(path.to_owned())),
             None => {
                 //TODO: Remember to warn people to only inject into content positions.
-                htmlescape::encode_minimal_w(self, sink)?;
+                html_escape::encode_text_minimal_to_writer(self, sink)?;
+                // htmlescape::encode_minimal_w(self, sink)?;
                 Ok(())
             },
         }
